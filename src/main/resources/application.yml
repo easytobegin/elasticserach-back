@@ -1,0 +1,14 @@
+spring:
+  data:
+    elasticsearch:
+      repositories:
+        enabled: true
+      cluster-nodes: 10.1.16.206:9300
+      cluster-name: elasticsearch-010001016206
+
+elasticsearchConfig:
+  host: 10.1.16.206
+  port: 9200
+  index-url: /_cat/indices?format=json&pretty&v&s=index
+server:
+  port: 9092

@@ -1,0 +1,118 @@
+package com.panport.logCloud.utils;
+
+import org.springframework.http.*;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
+
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * Created by minisheep on 2019/7/25.
+ */
+public class HttpUtils {
+    /**
+     * 发送get请求，参数放在url后面
+     */
+    public static String sendGetRequest(String strURL) throws IOException {
+        String result = "";
+        BufferedReader in = null;
+        String urlNameString = strURL;
+        URL realUrl = new URL(urlNameString);
+        // 打开和URL之间的连接
+        URLConnection connection = realUrl.openConnection();
+        // 设置通用的请求属性
+        connection.setRequestProperty("accept", "*/*");
+        connection.setRequestProperty("connection", "Keep-Alive");
+        connection.setRequestProperty("user-agent",
+                "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1;SV1)");
+        // 建立实际的连接
+        connection.connect();
+        // 获取所有响应头字段
+        Map<String, List<String>> map = connection.getHeaderFields();
+        // 定义 BufferedReader输入流来读取URL的响应
+        in = new BufferedReader(new InputStreamReader(
+                connection.getInputStream()));
+        String line;
+        while ((line = in.readLine()) != null) {
+            result += line;
+        }
+        if (in != null) {
+            in.close();
+        }
+
+        return result;
+    }
+
+    /**
+     * 发送post请求，参数单独发送到服务器端
+     */
+    public static String sendPostRequest(String url, String params) {
+        StringBuilder result = new StringBuilder();
+        String realUrl = url;
+        InputStream in = null;
+        BufferedReader br = null;
+        try {
+            // 与服务器建立连接
+            URL u = new URL(realUrl);
+            URLConnection conn = u.openConnection();
+            conn.setRequestProperty("accept", "*/*");
+            conn.setRequestProperty("connection", "keep-alive");
+
+            // post请求必须设置请求头
+            conn.setDoInput(true);
+            conn.setDoOutput(true);
+            conn.connect();
+
+            // 发送参数到服务器
+            OutputStream out = conn.getOutputStream();
+            PrintWriter pw = new PrintWriter(new OutputStreamWriter(out,
+                    "utf-8"));
+            pw.print(params);
+            pw.flush();
+            pw.close();
+
+            // 获取响应头
+            Map<String, List<String>> map = conn.getHeaderFields();
+            Set<Map.Entry<String, List<String>>> entry = map.entrySet();
+            Iterator<Map.Entry<String, List<String>>> it = entry.iterator();
+            while (it.hasNext()) {
+                Map.Entry<String, List<String>> en = it.next();
+                System.out.println(en.getKey() + ":::" + en.getValue());
+            }
+
+            // 获取响应数据
+            in = conn.getInputStream();
+            br = new BufferedReader(new InputStreamReader(in, "utf-8"));
+            String line;
+            while ((line = br.readLine()) != null) {
+                result.append(line);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (null != in) {
+                try {
+                    in.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (null != br) {
+                try {
+                    br.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return result.toString();
+    }
+}
