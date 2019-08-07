@@ -35,6 +35,9 @@ public class IndexSearchController {
     @Value("http://" + "${elasticsearchConfig.host}" + ":" + "${elasticsearchConfig.port}" + "${elasticsearchConfig.index-url}")
     private String indexUrl;
 
+    @Value("http://" + "${elasticsearchConfig.host}" + ":" + "${elasticsearchConfig.port}" + "${elasticsearchConfig.max-size}")
+    private String maxSize;
+
     @Autowired
     private TransportClient client;
 
@@ -136,5 +139,16 @@ public class IndexSearchController {
     @RequestMapping(value = "/deleteIndex", method = RequestMethod.DELETE)
     public Message deleteIndex(String index) {
         return Message.ok();
+    }
+
+    @RequestMapping(value = "/setMaxSize", method = RequestMethod.PUT)
+    public Message setMaxSize() {
+        String maxSizeResult = null;
+        try {
+            maxSizeResult = HttpUtils.httpPut(maxSize, "{\"max_result_window\" : 100000000}", "UTF-8");
+            return Message.ok(maxSizeResult);
+        } catch (Exception e) {
+            return Message.fail("设置失败");
+        }
     }
 }

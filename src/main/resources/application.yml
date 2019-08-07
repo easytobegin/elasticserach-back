@@ -10,5 +10,6 @@ elasticsearchConfig:
   host: 10.1.16.206
   port: 9200
   index-url: /_cat/indices?format=json&pretty&v&s=index
+  max-size: /_all/_settings?preserve_existing=true
 server:
   port: 9092

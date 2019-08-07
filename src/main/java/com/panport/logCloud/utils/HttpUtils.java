@@ -1,14 +1,19 @@
 package com.panport.logCloud.utils;
 
-import org.springframework.http.*;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
+
+
+
+import com.alibaba.fastjson.JSONException;
+import org.apache.commons.lang.StringUtils;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.springframework.http.RequestEntity;
 
 import java.io.*;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -114,5 +119,63 @@ public class HttpUtils {
             }
         }
         return result.toString();
+    }
+
+
+    public static String httpPut(String urlPath, String data, String charSet)
+    {
+        String result = null;
+        URL url = null;
+        HttpURLConnection httpurlconnection = null;
+        try
+        {
+            url = new URL(urlPath);
+            httpurlconnection = (HttpURLConnection) url.openConnection();
+            httpurlconnection.setDoInput(true);
+            httpurlconnection.setDoOutput(true);
+            httpurlconnection.setConnectTimeout(2000000);// 设置连接主机超时（单位：毫秒）
+            httpurlconnection.setReadTimeout(2000000);// 设置从主机读取数据超时（单位：毫秒）
+
+
+            httpurlconnection.setRequestMethod("PUT");
+            httpurlconnection.setRequestProperty("Content-Type", "application/json");
+
+            if (StringUtils.isNotBlank(data))
+            {
+                httpurlconnection.getOutputStream().write(data.getBytes("UTF-8"));
+            }
+            httpurlconnection.getOutputStream().flush();
+            httpurlconnection.getOutputStream().close();
+            int code = httpurlconnection.getResponseCode();
+
+            if (code == 200)
+            {
+                DataInputStream in = new DataInputStream(httpurlconnection.getInputStream());
+                int len = in.available();
+                byte[] by = new byte[len];
+                in.readFully(by);
+                if (StringUtils.isNotBlank(charSet))
+                {
+                    result = new String(by, Charset.forName(charSet));
+                } else
+                {
+                    result = new String(by);
+                }
+                in.close();
+            } else
+            {
+                System.out.println("请求地址：" + urlPath + "返回状态异常，异常号为：" + code);
+            }
+        } catch (Exception e)
+        {
+            System.out.println("访问url地址：" + urlPath + "发生异常");
+        } finally
+        {
+            if (httpurlconnection != null)
+            {
+                httpurlconnection.disconnect();
+            }
+        }
+        return result;
     }
 }
