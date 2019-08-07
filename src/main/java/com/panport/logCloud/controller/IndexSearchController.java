@@ -75,13 +75,31 @@ public class IndexSearchController {
             Set<String> strings = new HashSet<>();
             SearchHits hits = searchResponse.getHits();
             for (SearchHit searchHit : hits) {
-                strings = searchHit.getSource().keySet();
+                Map<String, Object> map = searchHit.getSource();
+                getTree("", map, strings);
+//                strings = searchHit.getSource().keySet();
                 break;
             }
 
             return new MessageBox<>(strings);
         } else {
             return Message.fail("找不到该索引！");
+        }
+    }
+
+    private void getTree (String key, Map<String, Object> map, Set<String> strings) {
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            if (entry != null && entry.getValue() != null && entry.getValue() instanceof Map) {
+                String temp = key;
+                key += entry.getKey() + ".";
+                getTree(key, (Map<String, Object>) entry.getValue(), strings);
+                key = temp;
+            } else {
+                String temp = key;
+                key += entry.getKey() + ".";
+                strings.add(key.substring(0, key.length() - 1));
+                key = temp;
+            }
         }
     }
 
