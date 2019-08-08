@@ -4,9 +4,19 @@ package com.panport.logCloud.utils;
 
 
 import com.alibaba.fastjson.JSONException;
+import org.apache.commons.lang.CharEncoding;
 import org.apache.commons.lang.StringUtils;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.springframework.http.RequestEntity;
 
 import java.io.*;
@@ -23,6 +33,8 @@ import java.util.Set;
  * Created by minisheep on 2019/7/25.
  */
 public class HttpUtils {
+    private static final HttpClient httpClient = HttpClientBuilder.create().build();
+
     /**
      * 发送get请求，参数放在url后面
      */
@@ -122,13 +134,11 @@ public class HttpUtils {
     }
 
 
-    public static String httpPut(String urlPath, String data, String charSet)
-    {
+    public static String httpPut(String urlPath, String data, String charSet) {
         String result = null;
         URL url = null;
         HttpURLConnection httpurlconnection = null;
-        try
-        {
+        try {
             url = new URL(urlPath);
             httpurlconnection = (HttpURLConnection) url.openConnection();
             httpurlconnection.setDoInput(true);
@@ -140,42 +150,75 @@ public class HttpUtils {
             httpurlconnection.setRequestMethod("PUT");
             httpurlconnection.setRequestProperty("Content-Type", "application/json");
 
-            if (StringUtils.isNotBlank(data))
-            {
+            if (StringUtils.isNotBlank(data)) {
                 httpurlconnection.getOutputStream().write(data.getBytes("UTF-8"));
             }
             httpurlconnection.getOutputStream().flush();
             httpurlconnection.getOutputStream().close();
             int code = httpurlconnection.getResponseCode();
 
-            if (code == 200)
-            {
+            if (code == 200) {
                 DataInputStream in = new DataInputStream(httpurlconnection.getInputStream());
                 int len = in.available();
                 byte[] by = new byte[len];
                 in.readFully(by);
-                if (StringUtils.isNotBlank(charSet))
-                {
+                if (StringUtils.isNotBlank(charSet)) {
                     result = new String(by, Charset.forName(charSet));
-                } else
-                {
+                } else {
                     result = new String(by);
                 }
                 in.close();
-            } else
-            {
+            } else {
                 System.out.println("请求地址：" + urlPath + "返回状态异常，异常号为：" + code);
             }
-        } catch (Exception e)
-        {
+        } catch (Exception e) {
             System.out.println("访问url地址：" + urlPath + "发生异常");
-        } finally
-        {
-            if (httpurlconnection != null)
-            {
+        } finally {
+            if (httpurlconnection != null) {
                 httpurlconnection.disconnect();
             }
         }
         return result;
+    }
+
+
+    public static String delete(String url) throws IOException {
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+        HttpDelete httpDelete = new HttpDelete(url);
+        RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(35000).setConnectionRequestTimeout(35000).setSocketTimeout(60000).build();
+        httpDelete.setConfig(requestConfig);
+        httpDelete.setHeader("Content-type", "application/json");
+        httpDelete.setHeader("DataEncoding", "UTF-8");
+
+        CloseableHttpResponse httpResponse = null;
+        try {
+            httpResponse = httpClient.execute(httpDelete);
+            HttpEntity entity = httpResponse.getEntity();
+            String result = EntityUtils.toString(entity);
+            return result;
+        } catch (ClientProtocolException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } finally {
+            if (httpResponse != null) {
+                try {
+                    httpResponse.close();
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+            if (null != httpClient) {
+                try {
+                    httpClient.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return null;
     }
 }

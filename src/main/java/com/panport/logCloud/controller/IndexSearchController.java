@@ -32,6 +32,9 @@ public class IndexSearchController {
     @Value("${elasticsearchConfig.host}")
     private String elasticHost;
 
+    @Value("http://" + "${elasticsearchConfig.host}" + ":" + "${elasticsearchConfig.port}")
+    private String elasticHostAndPort;
+
     @Value("http://" + "${elasticsearchConfig.host}" + ":" + "${elasticsearchConfig.port}" + "${elasticsearchConfig.index-url}")
     private String indexUrl;
 
@@ -48,10 +51,18 @@ public class IndexSearchController {
      */
 
     @RequestMapping(value = "/index", method = RequestMethod.GET)
-    public Message findAllIndex() {
+    public Message findAllIndex(@Param(value = "params") String params) {
         String indexResult = null;
         try {
-            indexResult = HttpUtils.sendGetRequest(indexUrl);
+            if (params == null) {
+                indexResult = HttpUtils.sendGetRequest(indexUrl);
+            } else if (params.equals("")) {
+                indexResult = HttpUtils.sendGetRequest(indexUrl);
+            } else {
+                StringBuilder stringBuilder = new StringBuilder();
+                stringBuilder.append(indexUrl).append("&index=").append("*").append(params).append("*");
+                indexResult = HttpUtils.sendGetRequest(stringBuilder.toString());
+            }
         } catch (IOException e) {
             return Message.fail("Http请求失败或者索引不存在！");
         }
@@ -135,10 +146,24 @@ public class IndexSearchController {
 
     /*
         索引的管理删除
+        curl -XDELETE -u elastic:changeme http://localhost:9200/acc-apply-2018.08.09,acc-apply-2018.08.10
      */
-    @RequestMapping(value = "/deleteIndex", method = RequestMethod.DELETE)
-    public Message deleteIndex(String index) {
-        return Message.ok();
+    @RequestMapping(value = "/deleteIndex", method = RequestMethod.POST)
+    public Message deleteIndex(@RequestBody Map<String, Object> map) {
+        List<String> indexs = (List<String>) map.get("indexs");
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(elasticHostAndPort).append("/");
+        for (int i = 0; i < indexs.size(); i++) {
+            stringBuilder.append(indexs.get(i)).append(",");
+        }
+        String url = stringBuilder.substring(0, stringBuilder.length() - 1);
+        try {
+            HttpUtils.delete(url);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Message.fail("删除索引失败！");
+        }
+        return Message.ok("删除索引成功！");
     }
 
     @RequestMapping(value = "/setMaxSize", method = RequestMethod.PUT)
