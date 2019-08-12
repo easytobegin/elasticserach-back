@@ -44,6 +44,19 @@ public class IndexSearchController {
     @Autowired
     private TransportClient client;
 
+    // 获取index配置的详细信息
+    @RequestMapping(value = "/indexInfo", method = RequestMethod.GET)
+    public Message findIndexInfo(@Param(value = "index") String index) {
+        String indexResult = null;
+        try {
+            if (index != null) {
+                indexResult = HttpUtils.sendGetRequest(elasticHostAndPort + "/" + index);
+            }
+        } catch (IOException e) {
+            return Message.fail("Http请求失败或者索引不存在！");
+        }
+        return new MessageBox<>(indexResult);
+    }
 
     /*
         获取全部索引 http://10.1.16.206:9200/_cat/indices?format=json&pretty

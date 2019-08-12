@@ -149,7 +149,7 @@ public class BuildQuery implements IBuildQuery {
                     .append(buildPageSize(pageSize)).append(buildTimeout(timeout)).append(buildTimestampOrder(timestampOrderBy));
         }
 
-//        System.out.println(stringBuilder.toString());
+        System.out.println(stringBuilder.toString());
         return stringBuilder.toString();
     }
 }
