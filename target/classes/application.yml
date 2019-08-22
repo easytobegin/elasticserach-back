@@ -5,11 +5,16 @@ spring:
         enabled: true
       cluster-nodes: 10.1.16.206:9300
       cluster-name: elasticsearch-010001016206
+#      cluster-nodes: 47.98.236.195:9300
+#      cluster-name: aliyun
 
 elasticsearchConfig:
   host: 10.1.16.206
+#  host: 47.98.236.195
   port: 9200
   index-url: /_cat/indices?format=json&pretty&v&s=index
   max-size: /_all/_settings?preserve_existing=true
+  refresh: /rules-store/_settings
+  _sql: /_sql
 server:
   port: 9092

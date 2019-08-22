@@ -20,9 +20,7 @@ import org.apache.http.util.EntityUtils;
 import org.springframework.http.RequestEntity;
 
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLConnection;
+import java.net.*;
 import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.List;
@@ -71,66 +69,45 @@ public class HttpUtils {
     /**
      * 发送post请求，参数单独发送到服务器端
      */
-    public static String sendPostRequest(String url, String params) {
-        StringBuilder result = new StringBuilder();
-        String realUrl = url;
-        InputStream in = null;
-        BufferedReader br = null;
+    public static String sendPostRequest(String originurl, String params) {
+        BufferedReader reader = null;
         try {
-            // 与服务器建立连接
-            URL u = new URL(realUrl);
-            URLConnection conn = u.openConnection();
-            conn.setRequestProperty("accept", "*/*");
-            conn.setRequestProperty("connection", "keep-alive");
-
-            // post请求必须设置请求头
-            conn.setDoInput(true);
-            conn.setDoOutput(true);
-            conn.connect();
-
-            // 发送参数到服务器
-            OutputStream out = conn.getOutputStream();
-            PrintWriter pw = new PrintWriter(new OutputStreamWriter(out,
-                    "utf-8"));
-            pw.print(params);
-            pw.flush();
-            pw.close();
-
-            // 获取响应头
-            Map<String, List<String>> map = conn.getHeaderFields();
-            Set<Map.Entry<String, List<String>>> entry = map.entrySet();
-            Iterator<Map.Entry<String, List<String>>> it = entry.iterator();
-            while (it.hasNext()) {
-                Map.Entry<String, List<String>> en = it.next();
-                System.out.println(en.getKey() + ":::" + en.getValue());
-            }
-
-            // 获取响应数据
-            in = conn.getInputStream();
-            br = new BufferedReader(new InputStreamReader(in, "utf-8"));
+            URL url = new URL(originurl);// 创建连接
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setDoOutput(true);
+            connection.setDoInput(true);
+            connection.setUseCaches(false);
+            connection.setInstanceFollowRedirects(true);
+            connection.setRequestMethod("POST"); // 设置请求方式
+            // connection.setRequestProperty("Accept", "application/json"); // 设置接收数据的格式
+            connection.setRequestProperty("Content-Type", "application/json"); // 设置发送数据的格式
+            connection.connect();
+            //一定要用BufferedReader 来接收响应， 使用字节来接收响应的方法是接收不到内容的
+            OutputStreamWriter out = new OutputStreamWriter(connection.getOutputStream(), "UTF-8"); // utf-8编码
+            out.append(params);
+            out.flush();
+            out.close();
+            // 读取响应
+            reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
             String line;
-            while ((line = br.readLine()) != null) {
-                result.append(line);
+            String res = "";
+            while ((line = reader.readLine()) != null) {
+                res += line;
             }
-        } catch (Exception e) {
+            reader.close();
+
+            return res;
+
+        } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
-        } finally {
-            if (null != in) {
-                try {
-                    in.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (null != br) {
-                try {
-                    br.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+        } catch (ProtocolException e) {
+            e.printStackTrace();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        return result.toString();
+        return "";
     }
 
 
@@ -169,10 +146,10 @@ public class HttpUtils {
                 }
                 in.close();
             } else {
-                System.out.println("请求地址：" + urlPath + "返回状态异常，异常号为：" + code);
+//                System.out.println("请求地址：" + urlPath + "返回状态异常，异常号为：" + code);
             }
         } catch (Exception e) {
-            System.out.println("访问url地址：" + urlPath + "发生异常");
+//            System.out.println("访问url地址：" + urlPath + "发生异常");
         } finally {
             if (httpurlconnection != null) {
                 httpurlconnection.disconnect();

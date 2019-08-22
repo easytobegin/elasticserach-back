@@ -41,6 +41,9 @@ public class IndexSearchController {
     @Value("http://" + "${elasticsearchConfig.host}" + ":" + "${elasticsearchConfig.port}" + "${elasticsearchConfig.max-size}")
     private String maxSize;
 
+    @Value("http://" + "${elasticsearchConfig.host}" + ":" + "${elasticsearchConfig.port}" + "${elasticsearchConfig.refresh}")
+    private String refreshTime;
+
     @Autowired
     private TransportClient client;
 
@@ -186,7 +189,20 @@ public class IndexSearchController {
             maxSizeResult = HttpUtils.httpPut(maxSize, "{\"max_result_window\" : 100000000}", "UTF-8");
             return Message.ok(maxSizeResult);
         } catch (Exception e) {
-            return Message.fail("设置失败");
+            return Message.fail("设置失败！");
+        }
+    }
+
+
+    // 设置索引的刷新间隔
+    @RequestMapping(value = "/refreshTime", method = RequestMethod.PUT)
+    public Message modifyRefreshTime() {
+        String refreshResult = null;
+        try {
+            refreshResult = HttpUtils.httpPut(refreshTime, "{ \"refresh_interval\": \"1s\" }", "UTF-8");
+            return Message.ok(refreshResult);
+        } catch (Exception e) {
+            return Message.fail("设置失败！");
         }
     }
 }

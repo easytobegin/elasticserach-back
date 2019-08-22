@@ -82,14 +82,21 @@ public class BuildQuery implements IBuildQuery {
                 String mapKey = entry.getKey();
                 String mapValue = entry.getValue();
                 try {
-                    stringBuilder.append(mapKey).append(":").append(URLEncoder.encode(mapValue, "UTF-8")).append("+");
+                    stringBuilder.append(mapKey).append(":").append(URLEncoder.encode(mapValue, "UTF-8")).append(URLEncoder.encode(" AND ", "UTF-8"));
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
                 }
             }
-            stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+            String result = null;
 
-            return stringBuilder.toString();
+            try {
+                result = stringBuilder.substring(0, stringBuilder.length() - URLEncoder.encode(" AND ", "UTF-8").length());
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+
+
+            return result;
         }
 
         return "";
@@ -149,7 +156,7 @@ public class BuildQuery implements IBuildQuery {
                     .append(buildPageSize(pageSize)).append(buildTimeout(timeout)).append(buildTimestampOrder(timestampOrderBy));
         }
 
-        System.out.println(stringBuilder.toString());
+//        System.out.println(stringBuilder.toString());
         return stringBuilder.toString();
     }
 }
